@@ -252,7 +252,7 @@ class CIFAR10Net(MetaModule):
     def __init__(self, layer_size=20, n_layers=1, **kwargs):
         super().__init__()
 
-        inp_size = 28*28
+        inp_size = 3 * 32 * 32
         self.layers = {}
         for i in range(n_layers):
             self.layers[f'mat_{i}'] = MetaLinear(inp_size, layer_size)

@@ -291,7 +291,7 @@ class CIFAR10ResNet(MetaModule):
     
     def forward(self, loss):
         inp, out = loss.sample()
-        inp = w(Variable(inp.view(inp.size()[0], 3, 28, 28)))
+        inp = w(Variable(inp.view(inp.size()[0], 3, 32, 32)))
         out = w(Variable(out))
         inp = self.net(inp)
         l = self.loss(inp, out)

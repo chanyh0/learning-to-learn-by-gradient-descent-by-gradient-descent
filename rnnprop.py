@@ -321,6 +321,7 @@ class MNISTResNet(MetaModule):
         inp, out = loss.sample()
         inp = w(Variable(inp.view(inp.size()[0], 1, 28, 28)))
         out = w(Variable(out))
+        print(inp)
         inp = self.net(inp)
         l = self.loss(inp, out)
         return l

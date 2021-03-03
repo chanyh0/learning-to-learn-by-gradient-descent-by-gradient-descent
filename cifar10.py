@@ -215,7 +215,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
 class CIFAR10Loss:
     def __init__(self, training=True):
         dataset = datasets.CIFAR10(
-            './data/CIFAR10', split="train", download=True,
+            './data/CIFAR10', train=True, download=True,
             transform=torchvision.transforms.Compose([
                 
                 torchvision.transforms.ToTensor(),

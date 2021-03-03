@@ -328,5 +328,5 @@ class MNISTResNet(MetaModule):
 
 from resnet_meta import resnet18
 model = resnet18(num_classes=10)
-loss, mnist_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True, test_target=MNISTResNet)
+loss, mnist_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True)#, test_target=MNISTResNet)
 print(loss)

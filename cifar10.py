@@ -269,7 +269,7 @@ class CIFAR10Net(MetaModule):
     
     def forward(self, loss):
         inp, out = loss.sample()
-        inp = w(Variable(inp.view(inp.size()[0], 3*28*28)))
+        inp = w(Variable(inp.view(inp.size()[0], 3*32*32)))
         out = w(Variable(out))
 
         cur_layer = 0

@@ -190,8 +190,8 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     best_loss = 100000000000000000
     
     for _ in tqdm(range(n_epochs), 'epochs'):
-        for _ in tqdm(range(20), 'iterations'):
-            do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
+        #for _ in tqdm(range(20), 'iterations'):
+        #    do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
         
         if test_target is not None:
             loss = (np.mean([

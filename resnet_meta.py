@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from .utils import load_state_dict_from_url
 from meta_module import *
 
 
@@ -219,10 +218,6 @@ class ResNet(MetaModule):
 
 def _resnet(arch, block, layers, pretrained, progress, **kwargs):
     model = ResNet(block, layers, **kwargs)
-    if pretrained:
-        state_dict = load_state_dict_from_url(model_urls[arch],
-                                              progress=progress)
-        model.load_state_dict(state_dict)
     return model
 
 

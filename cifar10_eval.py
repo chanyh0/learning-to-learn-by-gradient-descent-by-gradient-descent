@@ -303,5 +303,5 @@ class CIFAR10ResNet(MetaModule):
 
 from resnet_meta import resnet18
 model = resnet18(num_classes=10)
-loss, CIFAR10_optimizer = fit_optimizer(CIFAR10Loss, CIFAR10Net, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True)#), test_target=CIFAR10ResNet)
+loss, CIFAR10_optimizer = fit_optimizer(CIFAR10Loss, CIFAR10Net, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True, test_target=CIFAR10ResNet)
 print(loss)

@@ -144,14 +144,14 @@ class ResNet(MetaModule):
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
         self.layer1 = self._make_layer(block, 64, layers[0])
-        self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
+        #self.layer2 = self._make_layer(block, 128, layers[1], stride=2,
                                        dilate=replace_stride_with_dilation[0])
-        self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
+        #self.layer3 = self._make_layer(block, 256, layers[2], stride=2,
                                        dilate=replace_stride_with_dilation[1])
-        self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
+        #self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.fc = MetaLinear(512 * block.expansion, num_classes)
+        #self.fc = MetaLinear(512 * block.expansion, num_classes)
 
         self.fake_fc = MetaLinear(1, 10)
         for m in self.modules():
@@ -212,7 +212,7 @@ class ResNet(MetaModule):
         #x = self.fc(x)
         
         return self.fake_fc(torch.mean(x, [1,2,3]).view(-1, 1))
-        
+
     def forward(self, x):
         return self._forward_impl(x)
 

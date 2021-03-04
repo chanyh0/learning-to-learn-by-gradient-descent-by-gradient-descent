@@ -291,7 +291,6 @@ class CIFAR10Net(MetaModule):
 
 
 from resnets_meta import resnet20
-model = resnet20(num_classes=10)
 class CIFAR10ResNet(MetaModule):
     def __init__(self):
         super().__init__()

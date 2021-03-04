@@ -190,7 +190,7 @@ class MetaBatchNorm2d(MetaModule):
                         self.training or not self.track_running_stats, self.momentum, self.eps)
             
     def named_leaves(self):
-        return [('weight', self.weight), ('bias', self.bias)]
+        return [('weight', self.weight), ('bias', self.bias), ('running_mean', self.running_mean), ('running_var', self.running_var)]
 
 
 class MetaSequential(MetaModule):

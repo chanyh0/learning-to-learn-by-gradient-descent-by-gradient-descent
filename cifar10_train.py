@@ -30,9 +30,29 @@ def w(v):
 cache = joblib.Memory(location='_cache', verbose=0)
 
 
-from meta_module import *        
+from meta_module import *
+
+class QuadraticLoss:
+    def __init__(self, **kwargs):
+        self.W = w(Variable(torch.randn(10, 10)))
+        self.y = w(Variable(torch.randn(10)))
+        
+    def get_loss(self, theta):
+        return torch.sum((self.W.matmul(theta) - self.y)**2)
+    
+class QuadOptimizee(MetaModule):
+    def __init__(self, theta=None):
+        super().__init__()
+        self.register_buffer('theta', to_var(torch.zeros(10).cuda(), requires_grad=True))
+        
+    def forward(self, target):
+        return target.get_loss(self.theta)
+    
+    def all_named_parameters(self):
+        return [('theta', self.theta)]
+        
 class Optimizer(nn.Module):
-    def __init__(self, preproc=False, hidden_sz=10, preproc_factor=10.0):
+    def __init__(self, preproc=False, hidden_sz=2, preproc_factor=10.0):
         super().__init__()
         self.hidden_sz = hidden_sz
         if preproc:
@@ -98,8 +118,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
     n_params = 0
     for name, p in optimizee.all_named_parameters():
         n_params += int(np.prod(p.size()))
-    hidden_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(1)]
-    cell_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(1)]
+    hidden_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
+    cell_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
     all_losses_ever = []
     if should_train:
         meta_opt.zero_grad()
@@ -117,8 +137,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
 
         offset = 0
         result_params = {}
-        hidden_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(1)]
-        cell_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(1)]
+        hidden_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
+        cell_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
         for name, p in optimizee.all_named_parameters():
             cur_sz = int(np.prod(p.size()))
             # We do this so the gradients are disconnected from the graph but we still get
@@ -171,7 +191,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     
     for _ in tqdm(range(n_epochs), 'epochs'):
         print("train")
-        for _ in tqdm(range(10)):
+        for _ in tqdm(range(1)):
             do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
         '''
         if test_target is not None:
@@ -264,11 +284,10 @@ class CIFAR10Net(MetaModule):
         l = self.loss(inp, out)
         return l
 from resnets_meta import resnet56 
-from resnet_meta import resnet18
 class CIFAR10ResNet(MetaModule):
     def __init__(self):
         super().__init__()
-        self.net = resnet18(num_classes = 10)
+        self.net = resnet56(num_classes=10)
         self.loss = nn.CrossEntropyLoss()
     
     def all_named_parameters(self):

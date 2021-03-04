@@ -210,7 +210,7 @@ class ResNet(MetaModule):
         #x = torch.flatten(x, 1)
         #x = self.fc(x)
         
-        return x.mean()
+        return torch.mean(x, 0).repeat(0, 10)
 
     def forward(self, x):
         return self._forward_impl(x)

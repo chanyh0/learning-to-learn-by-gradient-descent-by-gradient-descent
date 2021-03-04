@@ -290,11 +290,11 @@ class CIFAR10Net(MetaModule):
         return l
 
 
-from resnets_meta import resnet32
+from resnets_meta import resnet56
 class CIFAR10ResNet(MetaModule):
     def __init__(self):
         super().__init__()
-        self.net = resnet32()
+        self.net = resnet56()
         self.loss = nn.CrossEntropyLoss()
     
     def all_named_parameters(self):

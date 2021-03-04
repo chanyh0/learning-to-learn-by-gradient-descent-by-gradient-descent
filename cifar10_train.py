@@ -283,11 +283,11 @@ class CIFAR10Net(MetaModule):
         inp = F.log_softmax(self.layers['final_mat'](inp), dim=1)
         l = self.loss(inp, out)
         return l
-from resnets_meta import resnet56 
+from resnets_meta import resnet20 
 class CIFAR10ResNet(MetaModule):
     def __init__(self):
         super().__init__()
-        self.net = resnet56(num_classes=10)
+        self.net = resnet20()
         self.loss = nn.CrossEntropyLoss()
     
     def all_named_parameters(self):

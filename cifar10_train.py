@@ -171,7 +171,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     
     for _ in tqdm(range(n_epochs), 'epochs'):
         print("train")
-        for _ in tqdm(range(1)):
+        for _ in tqdm(range(10)):
             do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
         '''
         if test_target is not None:

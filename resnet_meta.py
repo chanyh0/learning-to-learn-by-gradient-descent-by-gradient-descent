@@ -155,7 +155,7 @@ class ResNet(MetaModule):
 
         self.fake_fc = MetaLinear(1, 10)
         for m in self.modules():
-            if isinstance(m, nn.Conv2d):
+            if isinstance(m, MetaConv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
             elif isinstance(m, (MetaBatchNorm2d, nn.GroupNorm)):
                 nn.init.constant_(m.weight, 1)

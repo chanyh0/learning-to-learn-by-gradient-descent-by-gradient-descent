@@ -190,10 +190,12 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     best_loss = 100000000000000000
     
     for _ in tqdm(range(n_epochs), 'epochs'):
+        '''
         print("train")
         for _ in tqdm(range(1)):
             do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
         '''
+        print("eval")
         if test_target is not None:
             loss = (np.mean([
                 np.sum(do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False))
@@ -211,8 +213,6 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
             best_net = copy.deepcopy(opt_net.state_dict())
         
     return best_loss, best_net
-    '''
-    return 0, 0
   
 
 class CIFAR10Loss:

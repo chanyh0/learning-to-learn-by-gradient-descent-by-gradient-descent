@@ -295,7 +295,7 @@ model = resnet20(num_classes=10)
 class CIFAR10ResNet(MetaModule):
     def __init__(self):
         super().__init__()
-        self.net = resnet20(num_classes=10)
+        self.net = resnet20()
         self.loss = nn.CrossEntropyLoss()
     
     def all_named_parameters(self):

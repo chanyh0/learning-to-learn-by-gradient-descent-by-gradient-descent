@@ -153,6 +153,7 @@ class ResNet(MetaModule):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = MetaLinear(512 * block.expansion, num_classes)
 
+        self.fake_fc = MetaLinear(1, 10)
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
@@ -209,10 +210,9 @@ class ResNet(MetaModule):
         #x = self.avgpool(x)
         #x = torch.flatten(x, 1)
         #x = self.fc(x)
-        print(torch.mean(x, [1,2,3]).shape)
-        print(torch.mean(x, [1,2,3]).view(-1, 1).repeat(1, 10).shape)
-        return torch.mean(x, [1,2,3]).view(-1, 1).repeat(1, 10)
-
+        
+        return self.fake_fc(torch.mean(x, [1,2,3]).view(-1, 1))
+        
     def forward(self, x):
         return self._forward_impl(x)
 

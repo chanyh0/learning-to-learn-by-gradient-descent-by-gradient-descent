@@ -209,9 +209,8 @@ class ResNet(MetaModule):
         #x = self.avgpool(x)
         #x = torch.flatten(x, 1)
         #x = self.fc(x)
-        print(x.shape)
-        print(torch.mean(x, 0).shape)
-        return torch.mean(x, 0).view(-1, 1).repeat(0, 10)
+
+        return torch.mean(x, [1,2,3]).view(-1, 1).repeat(0, 10)
 
     def forward(self, x):
         return self._forward_impl(x)

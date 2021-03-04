@@ -144,17 +144,21 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
             cur_sz = int(np.prod(p.size()))
             # We do this so the gradients are disconnected from the graph but we still get
             # gradients from the rest
-            gradients = detach_var(p.grad.view(cur_sz, 1))
-            updates, new_hidden, new_cell = opt_net(
-                gradients,
-                [h[offset:offset+cur_sz] for h in hidden_states],
-                [c[offset:offset+cur_sz] for c in cell_states]
-            )
-            for i in range(len(new_hidden)):
-                hidden_states2[i][offset:offset+cur_sz] = new_hidden[i]
-                cell_states2[i][offset:offset+cur_sz] = new_cell[i]
-            result_params[name] = p + updates.view(*p.size()) * out_mul
-            result_params[name].retain_grad()
+            try:
+                gradients = detach_var(p.grad.view(cur_sz, 1))
+                updates, new_hidden, new_cell = opt_net(
+                    gradients,
+                    [h[offset:offset+cur_sz] for h in hidden_states],
+                    [c[offset:offset+cur_sz] for c in cell_states]
+                )
+                for i in range(len(new_hidden)):
+                    hidden_states2[i][offset:offset+cur_sz] = new_hidden[i]
+                    cell_states2[i][offset:offset+cur_sz] = new_cell[i]
+                result_params[name] = p + updates.view(*p.size()) * out_mul
+                result_params[name].retain_grad()
+            except AttributeError:
+                # no grad
+                result_params[name] = p
             
             offset += cur_sz
             

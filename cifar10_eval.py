@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import random
-from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm
 import multiprocessing
 import os.path
 import csv
@@ -52,7 +52,7 @@ class QuadOptimizee(MetaModule):
         return [('theta', self.theta)]
         
 class Optimizer(nn.Module):
-    def __init__(self, preproc=False, hidden_sz=20, preproc_factor=10.0):
+    def __init__(self, preproc=False, hidden_sz=2, preproc_factor=10.0):
         super().__init__()
         self.hidden_sz = hidden_sz
         if preproc:
@@ -140,25 +140,20 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
         hidden_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
         cell_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
         for name, p in optimizee.all_named_parameters():
-            #print(name)
             cur_sz = int(np.prod(p.size()))
             # We do this so the gradients are disconnected from the graph but we still get
             # gradients from the rest
-            try:
-                gradients = detach_var(p.grad.view(cur_sz, 1))
-                updates, new_hidden, new_cell = opt_net(
-                    gradients,
-                    [h[offset:offset+cur_sz] for h in hidden_states],
-                    [c[offset:offset+cur_sz] for c in cell_states]
-                )
-                for i in range(len(new_hidden)):
-                    hidden_states2[i][offset:offset+cur_sz] = new_hidden[i]
-                    cell_states2[i][offset:offset+cur_sz] = new_cell[i]
-                result_params[name] = p + updates.view(*p.size()) * out_mul
-                result_params[name].retain_grad()
-            except AttributeError:
-                # no grad
-                result_params[name] = p
+            gradients = detach_var(p.grad.view(cur_sz, 1))
+            updates, new_hidden, new_cell = opt_net(
+                gradients,
+                [h[offset:offset+cur_sz] for h in hidden_states],
+                [c[offset:offset+cur_sz] for c in cell_states]
+            )
+            for i in range(len(new_hidden)):
+                hidden_states2[i][offset:offset+cur_sz] = new_hidden[i]
+                cell_states2[i][offset:offset+cur_sz] = new_cell[i]
+            result_params[name] = p + updates.view(*p.size()) * out_mul
+            result_params[name].retain_grad()
             
             offset += cur_sz
             
@@ -194,22 +189,21 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     best_net = None
     best_loss = 100000000000000000
     
-    for _ in tqdm(range(n_epochs), 'epochs'):
+    for _ in tqdm(range(n_epochs)):
         '''
         print("train")
-        for _ in tqdm(range(1)):
+        for _ in tqdm(range(20)):
             do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
         '''
-        print("eval")
         if test_target is not None:
             loss = (np.mean([
                 np.sum(do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False))
-                for _ in tqdm(range(20))
+                for _ in tqdm(range(1))
             ]))
         else:
             loss = (np.mean([
                 np.sum(do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False))
-                for _ in tqdm(range(20))
+                for _ in tqdm(range(1))
             ]))
         print(loss)
         if loss < best_loss:
@@ -288,13 +282,11 @@ class CIFAR10Net(MetaModule):
         inp = F.log_softmax(self.layers['final_mat'](inp), dim=1)
         l = self.loss(inp, out)
         return l
-
-
-from resnets_meta import resnet56
+from resnet_meta import resnet18 
 class CIFAR10ResNet(MetaModule):
     def __init__(self):
         super().__init__()
-        self.net = resnet56()
+        self.net = resnet18()
         self.loss = nn.CrossEntropyLoss()
     
     def all_named_parameters(self):
@@ -309,5 +301,6 @@ class CIFAR10ResNet(MetaModule):
         return l
 
 
-loss, CIFAR10_optimizer = fit_optimizer(CIFAR10Loss, CIFAR10Net, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True, test_target=CIFAR10ResNet)
+
+loss, CIFAR10_optimizer = fit_optimizer(CIFAR10Loss, CIFAR10Net, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True)
 print(loss)

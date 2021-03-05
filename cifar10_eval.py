@@ -52,7 +52,7 @@ class QuadOptimizee(MetaModule):
         return [('theta', self.theta)]
         
 class Optimizer(nn.Module):
-    def __init__(self, preproc=False, hidden_sz=2, preproc_factor=10.0):
+    def __init__(self, preproc=False, hidden_sz=10, preproc_factor=10.0):
         super().__init__()
         self.hidden_sz = hidden_sz
         if preproc:

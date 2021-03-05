@@ -67,12 +67,6 @@ class Optimizer(nn.Module):
         
     def forward(self, inp, hidden, cell):
         if self.preproc:
-            # Implement preproc described in Appendix A
-            
-            # Note: we do all this work on tensors, which means
-            # the gradients won't propagate through inp. This
-            # should be ok because the algorithm involves
-            # making sure that inp is already detached.
             inp = inp.data
             inp2 = w(torch.zeros(inp.size()[0], 2))
             keep_grads = (torch.abs(inp) >= self.preproc_threshold).squeeze()
@@ -86,7 +80,34 @@ class Optimizer(nn.Module):
         hidden1, cell1 = self.recurs2(hidden0, (hidden[1], cell[1]))
         return self.output(hidden1), (hidden0, hidden1), (cell0, cell1)
     
-
+class OptimizerOneLayer(nn.Module):
+    def __init__(self, preproc=False, hidden_sz=10, preproc_factor=10.0):
+        super().__init__()
+        self.hidden_sz = hidden_sz
+        if preproc:
+            self.recurs = nn.LSTMCell(2, hidden_sz)
+        else:
+            self.recurs = nn.LSTMCell(1, hidden_sz)
+        self.output = nn.Linear(hidden_sz, 1)
+        self.preproc = preproc
+        self.preproc_factor = preproc_factor
+        self.preproc_threshold = np.exp(-preproc_factor)
+        
+    def forward(self, inp, hidden, cell):
+        if self.preproc:
+            inp = inp.data
+            inp2 = w(torch.zeros(inp.size()[0], 2))
+            keep_grads = (torch.abs(inp) >= self.preproc_threshold).squeeze()
+            inp2[:, 0][keep_grads] = (torch.log(torch.abs(inp[keep_grads]) + 1e-8) / self.preproc_factor).squeeze()
+            inp2[:, 1][keep_grads] = torch.sign(inp[keep_grads]).squeeze()
+            
+            inp2[:, 0][~keep_grads] = -1
+            inp2[:, 1][~keep_grads] = (float(np.exp(self.preproc_factor)) * inp[~keep_grads]).squeeze()
+            inp = w(Variable(inp2))
+        hidden0, cell0 = self.recurs(inp, (hidden[0], cell[0]))
+        #hidden1, cell1 = self.recurs2(hidden0, (hidden[1], cell[1]))
+        return self.output(hidden0), (hidden0, ), (cell0, )
+    
 
 def detach_var(v):
     var = w(Variable(v.data, requires_grad=True))
@@ -118,8 +139,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
     n_params = 0
     for name, p in optimizee.all_named_parameters():
         n_params += int(np.prod(p.size()))
-    hidden_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
-    cell_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
+    hidden_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz)))]
+    cell_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz)))]
     all_losses_ever = []
     if should_train:
         meta_opt.zero_grad()
@@ -137,8 +158,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
 
         offset = 0
         result_params = {}
-        hidden_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
-        cell_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
+        hidden_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz)))]
+        cell_states = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz)))]
         for name, p in optimizee.all_named_parameters():
             cur_sz = int(np.prod(p.size()))
             # We do this so the gradients are disconnected from the graph but we still get
@@ -151,8 +172,9 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
                     [c[offset:offset+cur_sz] for c in cell_states]
                 )
                 for i in range(len(new_hidden)):
-                    hidden_states2[i][offset:offset+cur_sz] = new_hidden[i]
-                    cell_states2[i][offset:offset+cur_sz] = new_cell[i]
+                    hidden_states[i][offset:offset+cur_sz] = new_hidden[i]
+                    cell_states[i][offset:offset+cur_sz] = new_cell[i]
+
                 result_params[name] = p + updates.view(*p.size()) * out_mul
                 result_params[name].retain_grad()
             else:
@@ -171,15 +193,15 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
             optimizee = w(target_to_opt())
             optimizee.load_state_dict(result_params)
             optimizee.zero_grad()
-            hidden_states = [detach_var(v) for v in hidden_states2]
-            cell_states = [detach_var(v) for v in cell_states2]
+            hidden_states = [detach_var(v) for v in hidden_states]
+            cell_states = [detach_var(v) for v in cell_states]
             
         else:
             for name, p in optimizee.all_named_parameters():
                 rsetattr(optimizee, name, result_params[name])
             assert len(list(optimizee.all_named_parameters()))
-            hidden_states = hidden_states2
-            cell_states = cell_states2
+            hidden_states = hidden_states
+            cell_states = cell_states
             
     return all_losses_ever
 

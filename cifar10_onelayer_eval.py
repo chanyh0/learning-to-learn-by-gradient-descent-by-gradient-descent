@@ -32,54 +32,6 @@ cache = joblib.Memory(location='_cache', verbose=0)
 
 from meta_module import *
 
-class QuadraticLoss:
-    def __init__(self, **kwargs):
-        self.W = w(Variable(torch.randn(10, 10)))
-        self.y = w(Variable(torch.randn(10)))
-        
-    def get_loss(self, theta):
-        return torch.sum((self.W.matmul(theta) - self.y)**2)
-    
-class QuadOptimizee(MetaModule):
-    def __init__(self, theta=None):
-        super().__init__()
-        self.register_buffer('theta', to_var(torch.zeros(10).cuda(), requires_grad=True))
-        
-    def forward(self, target):
-        return target.get_loss(self.theta)
-    
-    def all_named_parameters(self):
-        return [('theta', self.theta)]
-        
-class Optimizer(nn.Module):
-    def __init__(self, preproc=False, hidden_sz=10, preproc_factor=10.0):
-        super().__init__()
-        self.hidden_sz = hidden_sz
-        if preproc:
-            self.recurs = nn.LSTMCell(2, hidden_sz)
-        else:
-            self.recurs = nn.LSTMCell(1, hidden_sz)
-        self.recurs2 = nn.LSTMCell(hidden_sz, hidden_sz)
-        self.output = nn.Linear(hidden_sz, 1)
-        self.preproc = preproc
-        self.preproc_factor = preproc_factor
-        self.preproc_threshold = np.exp(-preproc_factor)
-        
-    def forward(self, inp, hidden, cell):
-        if self.preproc:
-            inp = inp.data
-            inp2 = w(torch.zeros(inp.size()[0], 2))
-            keep_grads = (torch.abs(inp) >= self.preproc_threshold).squeeze()
-            inp2[:, 0][keep_grads] = (torch.log(torch.abs(inp[keep_grads]) + 1e-8) / self.preproc_factor).squeeze()
-            inp2[:, 1][keep_grads] = torch.sign(inp[keep_grads]).squeeze()
-            
-            inp2[:, 0][~keep_grads] = -1
-            inp2[:, 1][~keep_grads] = (float(np.exp(self.preproc_factor)) * inp[~keep_grads]).squeeze()
-            inp = w(Variable(inp2))
-        hidden0, cell0 = self.recurs(inp, (hidden[0], cell[0]))
-        hidden1, cell1 = self.recurs2(hidden0, (hidden[1], cell[1]))
-        return self.output(hidden1), (hidden0, hidden1), (cell0, cell1)
-    
 class OptimizerOneLayer(nn.Module):
     def __init__(self, preproc=False, hidden_sz=10, preproc_factor=10.0):
         super().__init__()
@@ -106,7 +58,7 @@ class OptimizerOneLayer(nn.Module):
             inp = w(Variable(inp2))
         hidden0, cell0 = self.recurs(inp, (hidden[0], cell[0]))
         #hidden1, cell1 = self.recurs2(hidden0, (hidden[1], cell[1]))
-        return self.output(hidden0), (hidden0, ), (cell0,)
+        return self.output(hidden0), (hidden0, ), (cell0, )
     
 
 def detach_var(v):
@@ -207,7 +159,7 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
 
 @cache.cache
 def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=100, n_epochs=20, n_tests=100, lr=0.001, out_mul=1.0, test_target=None):
-    opt_net = w(Optimizer(preproc=preproc))
+    opt_net = w(OptimizerOneLayer(preproc=preproc))
     meta_opt = optim.Adam(opt_net.parameters(), lr=lr)
     
     best_net = None

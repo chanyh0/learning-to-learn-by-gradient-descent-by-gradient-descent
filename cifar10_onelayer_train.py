@@ -92,6 +92,7 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
     beta1 = 0.9
     beta2 = 0.999
     for iteration in range(1, optim_it + 1):
+        print(iteration)
         loss = optimizee(target)
                     
         if all_losses is None:
@@ -112,7 +113,7 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
             # gradients from the rest
             if p.grad is not None:
                 gradients = detach_var(p.grad.view(cur_sz, 1))
-                gradients = gradients + (torch.randn(cur_sz, 1, device=gradients.device) / 5.0 + 0.8)
+                #gradients = gradients + (torch.randn(cur_sz, 1, device=gradients.device) / 5.0 + 0.8)
                 if name in m:
                     m[name] = (1 - beta1) * gradients + beta1 * m[name]
                 else:
@@ -128,7 +129,7 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
                 
                 mt = m_hat[name] * (v_hat[name] ** (-0.5))
                 gt = gradients *   (v_hat[name] ** (-0.5))
-                inputs = torch.cat([mt, gt], 1)
+                inputs = detach_var(torch.cat([mt, gt], 1))
                 updates, new_hidden, new_cell = opt_net(
                     inputs,
                     [h[offset:offset+cur_sz] for h in hidden_states],

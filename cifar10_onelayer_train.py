@@ -92,7 +92,6 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
     beta1 = 0.9
     beta2 = 0.999
     for iteration in range(1, optim_it + 1):
-        print(iteration)
         loss = optimizee(target)
                     
         if all_losses is None:

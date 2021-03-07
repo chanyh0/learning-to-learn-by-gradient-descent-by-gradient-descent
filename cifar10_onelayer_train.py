@@ -182,12 +182,12 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
             do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
         if test_target is not None:
             loss = (np.mean([
-                np.sum(do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False))
+                np.mean((do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)[-100:])
                 for _ in tqdm(range(10))
             ]))
         else:
             loss = (np.mean([
-                np.sum(do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False))
+                np.mean((do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False)[-100:]))
                 for _ in tqdm(range(10))
             ]))
         print(loss)

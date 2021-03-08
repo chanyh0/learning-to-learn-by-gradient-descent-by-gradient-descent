@@ -181,7 +181,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
         #for _ in tqdm(range(20)):
         do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
 
-        if epoch % 1000 == 0:
+        if epoch % 100 == 0:
             if test_target is not None:
                 loss_record = np.mean(np.stack([
                     do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
@@ -275,7 +275,7 @@ class MNISTNet(MetaModule):
 
 
 
-loss, MNIST_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=10000, n_tests=20, out_mul=0.1, preproc=True)
+loss, MNIST_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=2000, n_tests=20, out_mul=0.1, preproc=True)
 print(loss)
 
 opt_net = w(OptimizerOneLayer(preproc=True))

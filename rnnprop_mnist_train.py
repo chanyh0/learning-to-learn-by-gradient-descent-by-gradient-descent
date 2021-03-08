@@ -33,7 +33,7 @@ cache = joblib.Memory(location='_cache', verbose=0)
 from meta_module import *
 
 class OptimizerOneLayer(nn.Module):
-    def __init__(self, preproc=False, hidden_sz=10, preproc_factor=10.0):
+    def __init__(self, preproc=False, hidden_sz=20, preproc_factor=10.0):
         super().__init__()
         self.hidden_sz = hidden_sz
         self.preprocess = nn.Linear(2, 20)
@@ -205,38 +205,39 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
 
 class MNISTLoss:
     def __init__(self, training=True):
-        dataset = datasets.MNIST(
+        if training:
+            dataset = datasets.MNIST(
             './data/MNIST', train=True, download=True,
             transform=torchvision.transforms.Compose([
                 
                 torchvision.transforms.ToTensor(),
                 #torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
             ])
-            
-            
         )
-        indices = list(range(len(dataset)))
-        np.random.RandomState(10).shuffle(indices)
-        if training:
-            indices = indices[:len(indices) // 2]
         else:
-            indices = indices[len(indices) // 2:]
+            dataset = datasets.MNIST(
+            './data/MNIST', train=False, download=True,
+            transform=torchvision.transforms.Compose([
+                
+                torchvision.transforms.ToTensor(),
+                #torchvision.transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+            ])
+        )
 
         self.loader = torch.utils.data.DataLoader(
-            dataset, batch_size=128,
-            sampler=torch.utils.data.sampler.SubsetRandomSampler(indices))
+            dataset, batch_size=128)
 
+        self.iter_loader = iter(self.loader)
         self.batches = []
         self.cur_batch = 0
         
     def sample(self):
-        if self.cur_batch >= len(self.batches):
-            self.batches = []
-            self.cur_batch = 0
-            for b in self.loader:
-                self.batches.append(b)
-        batch = self.batches[self.cur_batch]
-        self.cur_batch += 1
+        try:
+            batch = next(self.iter_loader)
+        except:
+            self.iter_loader = iter(self.loader)
+            batch = next(self.iter_loader)
+
         return batch
 
 class MNISTNet(MetaModule):

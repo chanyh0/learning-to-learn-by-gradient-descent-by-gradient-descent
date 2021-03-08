@@ -195,12 +195,12 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
             if test_target is not None:
                 loss_record = np.mean(np.stack([
                     do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
-                    for _ in tqdm(range(10))
+                    for _ in tqdm(range(n_tests))
                 ]), 0)
             else:
                 loss_record = np.mean(np.stack([
                     do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False)
-                    for _ in tqdm(range(10))
+                    for _ in tqdm(range(n_tests))
                 ]), 0)
         loss_record = loss_record.reshape(-1)
         loss = loss_record[-1]
@@ -329,5 +329,5 @@ class MNISTResNet(MetaModule):
 
 from resnet_meta import resnet18
 model = resnet18(num_classes=10)
-loss, mnist_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=10000, n_tests=20, out_mul=0.1, preproc=True)#, test_target=MNISTResNet)
+loss, mnist_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=10000, n_tests=10, out_mul=0.1, preproc=True)#, test_target=MNISTResNet)
 print(loss)

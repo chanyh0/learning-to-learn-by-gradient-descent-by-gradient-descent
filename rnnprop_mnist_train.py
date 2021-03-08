@@ -185,12 +185,12 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
             if test_target is not None:
                 loss_record = np.mean(np.stack([
                     do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
-                    for _ in tqdm(range(10))
+                    for _ in tqdm(range(n_tests))
                 ]), 0)
             else:
                 loss_record = np.mean(np.stack([
                     do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False)
-                    for _ in tqdm(range(10))
+                    for _ in tqdm(range(n_tests))
                 ]), 0)
         loss_record = loss_record.reshape(-1)
         loss = loss_record[-1]
@@ -199,7 +199,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
             best_loss = loss
             best_net = copy.deepcopy(opt_net.state_dict())
         import pickle
-        pickle.dump(loss_record, open("epoch_{}.pkl".format(epoch), 'wb'))
+        pickle.dump(loss_record, open("rnnprop_epoch_{}.pkl".format(epoch), 'wb'))
     return best_loss, best_net
   
 

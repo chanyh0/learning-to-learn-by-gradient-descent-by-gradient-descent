@@ -331,3 +331,13 @@ from resnet_meta import resnet18
 model = resnet18(num_classes=10)
 loss, mnist_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=2000, n_tests=10, out_mul=0.1, preproc=True)#, test_target=MNISTResNet)
 print(loss)
+
+opt_net = w(Optimizer(preproc=True))
+opt_net.load_state_dict(mnist_optimizer)
+meta_opt = optim.Adam(opt_net.parameters(), lr=0.01)
+loss_record = np.mean(np.stack([
+                    do_fit(opt_net, meta_opt, MNISTLoss, MNISTNet, 20, 10000, 1, 0.1, should_train=False)
+                    for _ in tqdm(range(10))
+                ]), 0)
+import pickle
+pickle.dump(loss_record, open("dm_best.pkl", 'wb'))

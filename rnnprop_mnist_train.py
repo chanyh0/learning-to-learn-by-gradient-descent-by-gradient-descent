@@ -286,4 +286,4 @@ loss_record = np.mean(np.stack([
                     for _ in tqdm(range(10))
                 ]), 0)
 import pickle
-pickle.dump(loss_record, open("best.pkl", 'wb'))
+pickle.dump(loss_record, open("rnnprop_best.pkl", 'wb'))

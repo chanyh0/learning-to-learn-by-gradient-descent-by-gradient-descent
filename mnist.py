@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 import matplotlib.pyplot as plt
 import random
-from tqdm import tqdm_notebook as tqdm
+from tqdm import tqdm
 import multiprocessing
 import os.path
 import csv
@@ -189,25 +189,24 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     best_net = None
     best_loss = 100000000000000000
     
-    for _ in tqdm(range(n_epochs), 'epochs'):
-        for _ in tqdm(range(20), 'iterations'):
-            do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
-        
-        if test_target is not None:
-            loss = (np.mean([
-                np.sum(do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False))
-                for _ in tqdm(range(n_tests), 'tests')
-            ]))
-        else:
-            loss = (np.mean([
-                np.sum(do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False))
-                for _ in tqdm(range(n_tests), 'tests')
-            ]))
-        print(loss)
-        if loss < best_loss:
-            print(best_loss, loss)
-            best_loss = loss
-            best_net = copy.deepcopy(opt_net.state_dict())
+    for epoch in tqdm(range(n_epochs)):
+        do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
+        if epoch % 100 == 0:
+            if test_target is not None:
+                loss = (np.mean([
+                    np.sum(do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False))
+                    for _ in tqdm(range(n_tests))
+                ]))
+            else:
+                loss = (np.mean([
+                    np.sum(do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False))
+                    for _ in tqdm(range(n_tests))
+                ]))
+            print(loss)
+            if loss < best_loss:
+                print(best_loss, loss)
+                best_loss = loss
+                best_net = copy.deepcopy(opt_net.state_dict())
             
     return best_loss, best_net
   
@@ -328,5 +327,5 @@ class MNISTResNet(MetaModule):
 
 from resnet_meta import resnet18
 model = resnet18(num_classes=10)
-loss, mnist_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True)#, test_target=MNISTResNet)
+loss, mnist_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=10000, n_tests=20, out_mul=0.1, preproc=True)#, test_target=MNISTResNet)
 print(loss)

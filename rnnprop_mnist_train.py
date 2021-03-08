@@ -89,8 +89,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
     v = {}
     m_hat = {}
     v_hat = {}
-    beta1 = 0.9
-    beta2 = 0.999
+    beta1 = 0.95
+    beta2 = 0.95
     for iteration in range(1, optim_it + 1):
         loss = optimizee(target)
                     

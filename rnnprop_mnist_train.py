@@ -274,7 +274,7 @@ class MNISTNet(MetaModule):
 
 
 
-loss, MNIST_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True)
+loss, MNIST_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=10000, n_tests=20, out_mul=0.1, preproc=True)
 print(loss)
 
 opt_net = w(OptimizerOneLayer(preproc=True))

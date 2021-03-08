@@ -189,7 +189,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
                 ]), 0)
             else:
                 loss_record = np.mean(np.stack([
-                    do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
+                    do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=False)
                     for _ in tqdm(range(10))
                 ]), 0)
         loss_record = loss_record.reshape(-1)

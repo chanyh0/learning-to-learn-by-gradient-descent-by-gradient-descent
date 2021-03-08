@@ -176,7 +176,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     best_net = None
     best_loss = 100000000000000000
     
-    for _ in tqdm(range(n_epochs)):
+    for epoch in tqdm(range(n_epochs)):
         print("train")
         for _ in tqdm(range(20)):
             do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
@@ -197,7 +197,7 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
             best_loss = loss
             best_net = copy.deepcopy(opt_net.state_dict())
         import pickle
-        pickle.dump(loss_record, open("epoch_{}.pkl".format(_), 'wb'))
+        pickle.dump(loss_record, open("epoch_{}.pkl".format(epoch), 'wb'))
     return best_loss, best_net
   
 

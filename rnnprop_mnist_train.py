@@ -169,7 +169,7 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
 
 
 @cache.cache
-def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=100, n_epochs=20, n_tests=100, lr=0.001, out_mul=1.0, test_target=None):
+def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=100, n_epochs=10000, n_tests=100, lr=0.001, out_mul=1.0, test_target=None):
     opt_net = w(OptimizerOneLayer(preproc=preproc))
     meta_opt = optim.Adam(opt_net.parameters(), lr=lr)
     
@@ -178,18 +178,20 @@ def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=
     
     for epoch in tqdm(range(n_epochs)):
         print("train")
-        for _ in tqdm(range(20)):
-            do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
-        if test_target is not None:
-            loss_record = np.mean(np.stack([
-                do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
-                for _ in tqdm(range(10))
-            ]), 0)
-        else:
-            loss_record = np.mean(np.stack([
-                do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
-                for _ in tqdm(range(10))
-            ]), 0)
+        #for _ in tqdm(range(20)):
+        do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True)
+
+        if epoch % 1000 == 0:
+            if test_target is not None:
+                loss_record = np.mean(np.stack([
+                    do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
+                    for _ in tqdm(range(10))
+                ]), 0)
+            else:
+                loss_record = np.mean(np.stack([
+                    do_fit(opt_net, meta_opt, target_cls, test_target, unroll, optim_it, n_epochs, out_mul, should_train=False)
+                    for _ in tqdm(range(10))
+                ]), 0)
         loss_record = loss_record.reshape(-1)
         loss = loss_record[-1]
         if loss < best_loss:
@@ -274,3 +276,13 @@ class MNISTNet(MetaModule):
 
 loss, MNIST_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=50, n_tests=20, out_mul=0.1, preproc=True)
 print(loss)
+
+opt_net = w(OptimizerOneLayer(preproc=True))
+opt_net.load_state_dict(MNIST_optimizer)
+meta_opt = optim.Adam(opt_net.parameters(), lr=0.01)
+loss_record = np.mean(np.stack([
+                    do_fit(opt_net, meta_opt, MNISTLoss, MNISTNet, 20, 10000, 1, 0.1, should_train=False)
+                    for _ in tqdm(range(10))
+                ]), 0)
+import pickle
+pickle.dump(loss_record, open("best.pkl", 'wb'))

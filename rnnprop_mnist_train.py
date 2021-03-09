@@ -32,8 +32,10 @@ cache = joblib.Memory(location='_cache', verbose=0)
 
 from meta_module import *
 
+global_step = 0
+
 class OptimizerOneLayer(nn.Module):
-    def __init__(self, preproc=False, hidden_sz=20, preproc_factor=10.0):
+    def __init__(self, hidden_sz=20):
         super().__init__()
         self.hidden_sz = hidden_sz
         self.preprocess = nn.Linear(2, 20)
@@ -68,6 +70,7 @@ def rgetattr(obj, attr, *args):
     return functools.reduce(_getattr, [obj] + attr.split('.'))
 
 def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epochs, out_mul, should_train=True):
+    global global_step
     if should_train:
         opt_net.train()
     else:
@@ -107,6 +110,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
         hidden_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
         cell_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
         for name, p in optimizee.all_named_parameters():
+            print(p.grad)
+        for name, p in optimizee.all_named_parameters():
             cur_sz = int(np.prod(p.size()))
             # We do this so the gradients are disconnected from the graph but we still get
             # gradients from the rest
@@ -126,8 +131,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
                 m_hat[name] = m[name] / (1 - beta1 ** iteration)
                 v_hat[name] = v[name] / (1 - beta2 ** iteration)
                 
-                mt = m_hat[name] * (v_hat[name] ** (-0.5))
-                gt = gradients *   (v_hat[name] ** (-0.5))
+                mt = m_hat[name] * ((v_hat[name] + 1e-10) ** (-0.5))
+                gt = gradients *   ((v_hat[name] + 1e-10) ** (-0.5))                
                 inputs = detach_var(torch.cat([mt, gt], 1))
                 updates, new_hidden, new_cell = opt_net(
                     inputs,
@@ -137,6 +142,9 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
                 for i in range(len(new_hidden)):
                     hidden_states2[i][offset:offset+cur_sz] = new_hidden[i]
                     cell_states2[i][offset:offset+cur_sz] = new_cell[i]
+                global_step += 1
+                if global_step > 20:
+                    raise NotImplementedError
                 result_params[name] = p + torch.tanh(updates.view(*p.size())) * out_mul
                 result_params[name].retain_grad()
             else:
@@ -169,8 +177,8 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
 
 
 @cache.cache
-def fit_optimizer(target_cls, target_to_opt, preproc=False, unroll=20, optim_it=100, n_epochs=10000, n_tests=100, lr=0.001, out_mul=1.0, test_target=None):
-    opt_net = w(OptimizerOneLayer(preproc=preproc))
+def fit_optimizer(target_cls, target_to_opt, unroll=20, optim_it=100, n_epochs=10000, n_tests=100, lr=0.001, out_mul=1.0, test_target=None):
+    opt_net = w(OptimizerOneLayer())
     meta_opt = optim.Adam(opt_net.parameters(), lr=lr)
     
     best_net = None
@@ -275,14 +283,14 @@ class MNISTNet(MetaModule):
 
 
 
-loss, MNIST_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=2000, n_tests=20, out_mul=0.1, preproc=True)
+loss, MNIST_optimizer = fit_optimizer(MNISTLoss, MNISTNet, lr=0.01, n_epochs=2000, n_tests=20, out_mul=0.1)
 print(loss)
 
-opt_net = w(OptimizerOneLayer(preproc=True))
+opt_net = w(OptimizerOneLayer())
 opt_net.load_state_dict(MNIST_optimizer)
 meta_opt = optim.Adam(opt_net.parameters(), lr=0.01)
 loss_record = np.mean(np.stack([
-                    do_fit(opt_net, meta_opt, MNISTLoss, MNISTNet, 20, 10000, 1, 0.1, should_train=False)
+                    do_fit(opt_net, meta_opt, MNISTLoss, MNISTNet, 20, 10000, 1, 0.01, should_train=False)
                     for _ in tqdm(range(10))
                 ]), 0)
 import pickle

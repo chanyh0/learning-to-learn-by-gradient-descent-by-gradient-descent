@@ -142,9 +142,7 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
                 for i in range(len(new_hidden)):
                     hidden_states2[i][offset:offset+cur_sz] = new_hidden[i]
                     cell_states2[i][offset:offset+cur_sz] = new_cell[i]
-                global_step += 1
-                if global_step > 20:
-                    raise NotImplementedError
+                
                 result_params[name] = p + torch.tanh(updates.view(*p.size())) * out_mul
                 result_params[name].retain_grad()
             else:

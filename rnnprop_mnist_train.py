@@ -110,8 +110,6 @@ def do_fit(opt_net, meta_opt, target_cls, target_to_opt, unroll, optim_it, n_epo
         hidden_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
         cell_states2 = [w(Variable(torch.zeros(n_params, opt_net.hidden_sz))) for _ in range(2)]
         for name, p in optimizee.all_named_parameters():
-            print(p.grad)
-        for name, p in optimizee.all_named_parameters():
             cur_sz = int(np.prod(p.size()))
             # We do this so the gradients are disconnected from the graph but we still get
             # gradients from the rest

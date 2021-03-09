@@ -341,3 +341,4 @@ loss_record = np.mean(np.stack([
                 ]), 0)
 import pickle
 pickle.dump(loss_record, open("dm_best.pkl", 'wb'))
+pickle.dump(mnist_optimizer, open("dm.pkl", 'wb'))

@@ -221,7 +221,7 @@ class CIFAR10Loss:
         )
 
         self.loader = torch.utils.data.DataLoader(
-            dataset, batch_size=128, num_worker=3, pin_memory=True)
+            dataset, batch_size=128, num_workers=3, pin_memory=True)
 
         self.iter_loader = iter(self.loader)
         self.batches = []

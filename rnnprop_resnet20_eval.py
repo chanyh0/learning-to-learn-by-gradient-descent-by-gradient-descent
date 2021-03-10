@@ -221,7 +221,7 @@ class MNISTLoss:
         )
         else:
             dataset = datasets.CIFAR10(
-            './data/CIFAR10', train=False, train=True,
+            './data/CIFAR10', train=False, download=True,
             transform=torchvision.transforms.Compose([
                 
                 torchvision.transforms.ToTensor(),

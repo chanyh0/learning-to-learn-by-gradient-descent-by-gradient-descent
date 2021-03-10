@@ -263,7 +263,7 @@ class CIFAR10ResNet(MetaModule):
         return l
 
 
-
+import pickle
 MNIST_optimizer = pickle.load(open("rnnprop.pkl", 'wb'))
 opt_net = w(OptimizerOneLayer())
 opt_net.load_state_dict(MNIST_optimizer)
@@ -272,5 +272,5 @@ loss_record = np.mean(np.stack([
                     do_fit(opt_net, meta_opt, CIFAR10Loss, CIFAR10ResNet, 20, 10000, 1, 0.01, should_train=False)
                     for _ in tqdm(range(10))
                 ]), 0)
-import pickle
+
 pickle.dump(loss_record, open("rnnprop_cifar10_res20_best.pkl", 'wb'))

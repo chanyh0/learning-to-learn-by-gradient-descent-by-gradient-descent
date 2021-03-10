@@ -264,7 +264,7 @@ class CIFAR10ResNet(MetaModule):
 
 
 import pickle
-MNIST_optimizer = pickle.load(open("rnnprop.pkl", 'wb'))
+MNIST_optimizer = pickle.load(open("rnnprop.pkl", 'rb'))
 opt_net = w(OptimizerOneLayer())
 opt_net.load_state_dict(MNIST_optimizer)
 meta_opt = optim.Adam(opt_net.parameters(), lr=0.01)

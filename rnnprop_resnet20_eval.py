@@ -1,4 +1,3 @@
-from cifar10_onelayer_eval import CIFAR10Loss
 import glob
 import numpy as np
 import torch
@@ -208,7 +207,7 @@ def fit_optimizer(target_cls, target_to_opt, unroll=20, optim_it=100, n_epochs=1
     return best_loss, best_net
   
 
-class MNISTLoss:
+class CIFAR10Loss:
     def __init__(self, training=True):
         if training:
             dataset = datasets.CIFAR10(
